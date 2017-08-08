@@ -1,8 +1,18 @@
+extern crate robust_sum;
+extern crate robust_scale;
+extern crate two_product;
+extern crate robust_compress_seq;
+extern crate robust_segment_intersect;
 
+use robust_compress_seq::compress;
+use robust_sum::robust_sum as rsum;
+use robust_scale::robust_scale as rscale;
+use two_product::two_product as tprod;
+use robust_segment_intersect::segment_intersects;
 
 //Robust segment intersection of line segments
-fn SegIntersection(a:&[f64], b:&[f64], c:&[f64], d:&[f64] ) -> Vec<Vec<f64>>{
-	exact_intersect(a, b, c, d)
+pub fn segment_intersection(a: &[f64], b: &[f64], c: &[f64], d: &[f64]) -> Vec<Vec<f64>> {
+    exact_intersect(a, b, c, d)
 }
 
 // Find solution to system of two linear equations
@@ -15,35 +25,129 @@ fn SegIntersection(a:&[f64], b:&[f64], c:&[f64], d:&[f64] ) -> Vec<Vec<f64>>{
 //  | d[0]  d[1]   1 |  =  0
 //  |  x      y    1 |
 //
-fn exact_intersect(a:&[f64], b:&[f64], c:&[f64], d:&[f64]) -> Vec<Vec<f64>>{
+fn exact_intersect(a: &[f64], b: &[f64], c: &[f64], d: &[f64]) -> Vec<Vec<f64>> {
+    if !segment_intersects(a, b, c, d) {
+        return vec!(vec!(0.), vec!(0.), vec!(0.));
+    }
 
-	if !SegIntersects(a, b, c, d) {
-		return [][]float64{{0}, {0}, {0}}
-	}
+    let x1 = rsum(&vec!(c[1]), &vec!(-d[1]));
+    let y1 = rsum(&vec!(-c[0]), &vec!(d[0]));
 
-	let x1 = rsum([]float64{c[1]}, []float64{-d[1]})
-	let y1 = rsum([]float64{-c[0]}, []float64{d[0]})
+    let mut denom = rsum(
+        &rsum(&rscale(&y1, a[1]), &rscale(&y1, -b[1])),
+        &rsum(&rscale(&x1, a[0]), &rscale(&x1, -b[0])),
+    );
 
-	let denom = rsum(
-		rsum(rscale(y1, a[1]), rscale(y1, -b[1])),
-		rsum(rscale(x1, a[0]), rscale(x1, -b[0])),
-	)
+    let w0 = rsum(&tprod(-a[0], b[1]), &tprod(a[1], b[0]));
+    let w1 = rsum(&tprod(-c[0], d[1]), &tprod(c[1], d[0]));
 
-	let w0 = rsum(tprod(-a[0], b[1]), tprod(a[1], b[0]))
-	let w1 = rsum(tprod(-c[0], d[1]), tprod(c[1], d[0]))
+    //Calculate nX, nY
+    let mut nx = rsum(
+        &rsum(&rscale(&w1, a[0]), &rscale(&w1, -b[0])),
+        &rsum(&rscale(&w0, -c[0]), &rscale(&w0, d[0])),
+    );
 
-	//Calculate nX, nY
-	let nX = rsum(
-		rsum(rscale(w1, a[0]), rscale(w1, -b[0])),
-		rsum(rscale(w0, -c[0]), rscale(w0, d[0])),
-	)
+    let mut ny = rsum(
+        &rsum(&rscale(&w1, a[1]), &rscale(&w1, -b[1])),
+        &rsum(&rscale(&w0, -c[1]), &rscale(&w0, d[1])),
+    );
 
-	let nY = rsum(
-		rsum(rscale(w1, a[1]), rscale(w1, -b[1])),
-		rsum(rscale(w0, -c[1]), rscale(w0, d[1])),
-	)
+    vec!(compress(&mut nx), compress(&mut ny), compress(&mut denom))
+}
 
-	return [][]float64{
-		Compress(nX), Compress(nY), Compress(denom),
-	}
+#[cfg(test)]
+mod robust_seg_intersection {
+    use super::{segment_intersection};
+
+    use self::rand::random;
+    use super::robust_sum;
+    use self::validate_robust_seq::validate_sequence as validate;
+
+
+    fn rnd() -> f64 {
+        random::<f64>()
+    }
+
+    #[test]
+    fn test_seg_intersection() {
+			//Evaluate:
+			//
+			//  | a[0]  a[1]  1 |
+			//  | b[0]  b[1]  1 |
+			//  |  x     y    w |
+			//
+			fn testPoint(a: &[f64], b: &[f64], x: &[f64], y: &[f64], w : &[f64]) {
+
+				let d0 = Sum(af(a[1]), af(-b[1]));
+				let d1 = Sum(af(a[0]), af(-b[0]));
+				let d2 = Det2([][]float64{a, b});
+
+				//validate det.RobustDet2
+				g.Assert(validate_seq.ValidateSequence(d2)).IsTrue();
+
+				let p0 = Product(x, d0);
+				let p1 = Product(y, d1);
+				let p2 = Product(w, d2);
+				//validate p0
+				g.Assert(validate_seq.ValidateSequence(p0)).IsTrue();
+				//validate p1
+				g.Assert(validate_seq.ValidateSequence(p1)).IsTrue();
+				//validate p2
+				g.Assert(validate_seq.ValidateSequence(p2)).IsTrue();
+
+				let s = Sum(Subtract(p0, p1), p2);
+				//validate s
+				g.Assert(validate_seq.ValidateSequence(s)).IsTrue();
+				//check point on line
+				g.Assert(Cmp(s, []float64{0}) == 0).IsTrue()
+			}
+
+			fn verify(a: &[f64], b: &[f64], c: &[f64], d: &[f64]) {
+				let x = SegIntersection(a, b, c, d)
+				//validate x
+				g.Assert(validate_seq.ValidateSequence(x[0])).IsTrue()
+				//validate y
+				g.Assert(validate_seq.ValidateSequence(x[1])).IsTrue()
+				//validate w
+				g.Assert(validate_seq.ValidateSequence(x[2])).IsTrue()
+				testPoint(a, b, x[0], x[1], x[2])
+				testPoint(c, d, x[0], x[1], x[2])
+
+				let p = [][][]float64{{a, b}, {c, d}}
+				for s := 0; s < 2; s++ {
+					for r := 0; r < 2; r++ {
+						for h := 0; h < 2; h++ {
+							let y = SegIntersection(
+								p[h][s], p[h][s^1],
+								p[h^1][r], p[h^1][r^1],
+							)
+							//validate x
+							g.Assert(validate_seq.ValidateSequence(y[0])).IsTrue()
+							//validate y
+							g.Assert(validate_seq.ValidateSequence(y[1])).IsTrue()
+							//validate w
+							g.Assert(validate_seq.ValidateSequence(y[2])).IsTrue()
+							//check x
+							g.Assert(Cmp(Product(y[0], x[2]), Product(x[0], y[2])) == 0).IsTrue()
+							//check y
+							g.Assert(Cmp(Product(y[1], x[2]), Product(x[1], y[2])) == 0).IsTrue()
+						}
+					}
+				}
+			}
+			//Fuzz test
+			for i := 0; i < 100; i++ {
+				verify(
+					af(random.Float64(), random.Float64()),
+					af(random.Float64(), random.Float64()),
+					af(random.Float64(), random.Float64()),
+					af(random.Float64(), random.Float64()),
+				)
+			}
+
+
+			let isect = SegIntersection(af(-1, 10), af(-10, 1), af(10, 0), af(10, 10))
+			//no intersections
+            g.Assert(isect[2][0]== 0).IsTrue() 
+    }
 }

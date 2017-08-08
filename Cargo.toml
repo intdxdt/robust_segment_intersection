@@ -1,6 +1,16 @@
 [package]
-name = "segment_intersection"
+name = "robust_segment_intersection"
 version = "0.1.0"
 authors = ["Titus Tienaah <titus.intdxdt@gmail.com>"]
 
 [dependencies]
+robust_sum = { git = "https://github.com/intdxdt/robust_sum", branch = "master" }
+two_product = { git = "https://github.com/intdxdt/two_product", branch = "master" }
+robust_scale = { git = "https://github.com/intdxdt/robust_scale", branch = "master" }
+robust_subtract = { git = "https://github.com/intdxdt/robust_subtract", branch = "master" }
+robust_compress_seq = { git = "https://github.com/intdxdt/robust_compress_seq", branch = "master" }
+robust_segment_intersect = { git = "https://github.com/intdxdt/robust_segment_intersect", branch = "master" }
+
+
+[dev-dependencies]
+rand = "0.3.15"
