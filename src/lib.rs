@@ -57,8 +57,14 @@ fn exact_intersect(a: &[f64], b: &[f64], c: &[f64], d: &[f64]) -> Vec<Vec<f64>> 
 
 #[cfg(test)]
 mod robust_seg_intersection {
-    use super::{segment_intersection};
+    extern crate validate_robust_seq;
+	extern crate robust_determinant;
+	extern crate robust_product;
 
+    use super::{segment_intersection, rsum, rprod};
+
+	use robust_determinant::det2;
+	use robust_product::product;
     use self::rand::random;
     use super::robust_sum;
     use self::validate_robust_seq::validate_sequence as validate;
@@ -76,40 +82,40 @@ mod robust_seg_intersection {
 			//  | b[0]  b[1]  1 |
 			//  |  x     y    w |
 			//
-			fn testPoint(a: &[f64], b: &[f64], x: &[f64], y: &[f64], w : &[f64]) {
+			fn test_pt_seq(a: &[f64], b: &[f64], x: &[f64], y: &[f64], w : &[f64]) {
 
-				let d0 = Sum(af(a[1]), af(-b[1]));
-				let d1 = Sum(af(a[0]), af(-b[0]));
-				let d2 = Det2([][]float64{a, b});
+				let d0 = rsum(vec!(a[1]), vec!(-b[1]));
+				let d1 = rsum(vec!(a[0]), vec!(-b[0]));
+				let d2 = det2(&vec!(a, b));
 
 				//validate det.RobustDet2
-				g.Assert(validate_seq.ValidateSequence(d2)).IsTrue();
+				assert!(validate(d2));
 
 				let p0 = Product(x, d0);
 				let p1 = Product(y, d1);
 				let p2 = Product(w, d2);
 				//validate p0
-				g.Assert(validate_seq.ValidateSequence(p0)).IsTrue();
+				assert!(validate(p0)).IsTrue();
 				//validate p1
-				g.Assert(validate_seq.ValidateSequence(p1)).IsTrue();
+				assert!(validate(p1)).IsTrue();
 				//validate p2
-				g.Assert(validate_seq.ValidateSequence(p2)).IsTrue();
+				assert!(validate(p2)).IsTrue();
 
 				let s = Sum(Subtract(p0, p1), p2);
 				//validate s
-				g.Assert(validate_seq.ValidateSequence(s)).IsTrue();
+				assert!(validate(s)).IsTrue();
 				//check point on line
-				g.Assert(Cmp(s, []float64{0}) == 0).IsTrue()
+				assert!(cmp(s, []float64{0}) == 0)
 			}
 
 			fn verify(a: &[f64], b: &[f64], c: &[f64], d: &[f64]) {
 				let x = SegIntersection(a, b, c, d)
 				//validate x
-				g.Assert(validate_seq.ValidateSequence(x[0])).IsTrue()
+				assert!(validate(x[0])).IsTrue()
 				//validate y
-				g.Assert(validate_seq.ValidateSequence(x[1])).IsTrue()
+				assert!(validate(x[1])).IsTrue()
 				//validate w
-				g.Assert(validate_seq.ValidateSequence(x[2])).IsTrue()
+				assert!(validate(x[2])).IsTrue()
 				testPoint(a, b, x[0], x[1], x[2])
 				testPoint(c, d, x[0], x[1], x[2])
 
@@ -122,15 +128,15 @@ mod robust_seg_intersection {
 								p[h^1][r], p[h^1][r^1],
 							)
 							//validate x
-							g.Assert(validate_seq.ValidateSequence(y[0])).IsTrue()
+							assert!(validate(y[0])).IsTrue()
 							//validate y
-							g.Assert(validate_seq.ValidateSequence(y[1])).IsTrue()
+							assert!(validate(y[1])).IsTrue()
 							//validate w
-							g.Assert(validate_seq.ValidateSequence(y[2])).IsTrue()
+							assert!(validate(y[2])).IsTrue()
 							//check x
-							g.Assert(Cmp(Product(y[0], x[2]), Product(x[0], y[2])) == 0).IsTrue()
+							assert!(Cmp(Product(y[0], x[2]), Product(x[0], y[2])) == 0).IsTrue()
 							//check y
-							g.Assert(Cmp(Product(y[1], x[2]), Product(x[1], y[2])) == 0).IsTrue()
+							assert!(Cmp(Product(y[1], x[2]), Product(x[1], y[2])) == 0).IsTrue()
 						}
 					}
 				}
@@ -138,16 +144,16 @@ mod robust_seg_intersection {
 			//Fuzz test
 			for i := 0; i < 100; i++ {
 				verify(
-					af(random.Float64(), random.Float64()),
-					af(random.Float64(), random.Float64()),
-					af(random.Float64(), random.Float64()),
-					af(random.Float64(), random.Float64()),
+					vec!(random.Float64(), random.Float64()),
+					vec!(random.Float64(), random.Float64()),
+					vec!(random.Float64(), random.Float64()),
+					vec!(random.Float64(), random.Float64()),
 				)
 			}
 
 
-			let isect = SegIntersection(af(-1, 10), af(-10, 1), af(10, 0), af(10, 10))
+			let isect = SegIntersection(vec!(-1, 10), vec!(-10, 1), vec!(10, 0), vec!(10, 10))
 			//no intersections
-            g.Assert(isect[2][0]== 0).IsTrue() 
+            assert!(isect[2][0]== 0).IsTrue() 
     }
 }
