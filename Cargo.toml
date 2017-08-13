@@ -14,7 +14,9 @@ robust_segment_intersect = { git = "https://github.com/intdxdt/robust_segment_in
 
 [dev-dependencies]
 rand = "0.3.15"
-robust_product = { git = "https://github.com/intdxdt/robust_product", branch = "master" }
-robust_determinant = { git = "https://github.com/intdxdt/robust_determinant", branch = "master" }
+robust_subtract     = { git = "https://github.com/intdxdt/robust_subtract", branch = "master" }
+robust_compare      = { git = "https://github.com/intdxdt/robust_compare", branch = "master" }
+robust_product      = { git = "https://github.com/intdxdt/robust_product", branch = "master" }
+robust_determinant  = { git = "https://github.com/intdxdt/robust_determinant", branch = "master" }
 validate_robust_seq = { git = "https://github.com/intdxdt/validate_robust_seq", branch = "master" }
 
