@@ -73,18 +73,13 @@ mod robust_seg_intersection {
     use self::validate_robust_seq::validate_sequence as validate;
 
 
-    fn rnd() -> f64 {
-        random::<f64>()
-    }
+    fn rnd() -> f64 { random::<f64>() }
 
     #[test]
     fn test_seg_intersection() {
-        //Evaluate:
-        //
         //  | a[0]  a[1]  1 |
         //  | b[0]  b[1]  1 |
         //  |  x     y    w |
-        //
         fn test_pt_seq(a: &[f64], b: &[f64], x: &[f64], y: &[f64], w: &[f64]) {
             let d0 = rsum(&vec!(a[1]), &vec!(-b[1]));
             let d1 = rsum(&vec!(a[0]), &vec!(-b[0]));
@@ -161,6 +156,7 @@ mod robust_seg_intersection {
             &vec!(10., 10.)
         );
         //no intersections
-        assert!(isect[2][0] == 0.)
+        assert!(isect[2][0] == 0.);
+
     }
 }
